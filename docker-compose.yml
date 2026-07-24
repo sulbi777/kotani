@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - kotani-network
+
+  monitoring-web:
+    build: ./monitoring-web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monitoring.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.monitoring.entrypoints=web"
+    networks:
+      - kotani-network
+
+  bff-android:
+    build: ./bff-android
+    environment:
+      - KOTANI_CORE_BACKEND_URL=http://kotani-backend:8080
+    depends_on:
+      - kotani-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bff-android.rule=PathPrefix(`/api/android/`)"
+      - "traefik.http.middlewares.bff-android-strip.stripprefix.prefixes=/api/android/"
+      - "traefik.http.routers.bff-android.middlewares=bff-android-strip"
+    networks:
+      - kotani-network
+
+  kotani-backend:
+    build: ./kotani-backend
+    env_file:
+      - .env.example
+    depends_on:
+      - postgres-db
+      - kafka-broker
+    networks:
+      - kotani-network
+
+  postgres-db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=kotani_user
+      - POSTGRES_PASSWORD=secure_password
+      - POSTGRES_DB=kotani_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - kotani-network
+
+  kafka-broker:
+    image: bitnami/kafka:latest
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - kotani-network
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - kotani-network
+
+networks:
+  kotani-network:
+    driver: bridge
+
+volumes:
+  pgdata:
