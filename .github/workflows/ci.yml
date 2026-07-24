@@ -26,5 +26,14 @@ jobs:
     - name: Run Bandit Security Scan
       run: bandit -r kotani-backend/
 
-    - name: Build Backend Docker Image
+    - name: Install C dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y librdkafka-dev
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        - name: Build Backend Docker Image
       run: docker build -t kotani-backend:latest ./kotani-backend
