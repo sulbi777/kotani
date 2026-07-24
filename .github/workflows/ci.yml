@@ -22,18 +22,29 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r kotani-backend/requirements.txt
         pip install pytest bandit
+        
+      - name: Install C dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librdkafka-dev
 
-    - name: Run Bandit Security Scan
-      run: bandit -r kotani-backend/
-
-    - name: Install C dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y librdkafka-dev
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+        - name: Run Bandit Security Scan
+          run: bandit -r kotani-backend/
     
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        - name: Install C dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y librdkafka-dev
+        
+        - name: Install Python dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            
         - name: Build Backend Docker Image
       run: docker build -t kotani-backend:latest ./kotani-backend
