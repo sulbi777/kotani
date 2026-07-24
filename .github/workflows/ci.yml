@@ -24,12 +24,12 @@ jobs:
         pip install pytest bandit
         
       - name: Install C dependencies
-        run: |
+        run:
           sudo apt-get update
           sudo apt-get install -y librdkafka-dev
 
       - name: Install Python dependencies
-        run: |
+        run:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
@@ -37,14 +37,10 @@ jobs:
           run: bandit -r kotani-backend/
     
         - name: Install C dependencies
-          run: |
+          run:
             sudo apt-get update
             sudo apt-get install -y librdkafka-dev
-        
-        - name: Install Python dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-            
+
+
         - name: Build Backend Docker Image
       run: docker build -t kotani-backend:latest ./kotani-backend
